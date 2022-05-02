@@ -56,7 +56,7 @@ class Scraper:
         return df
 
 
-def load_data(tickers, years) -> pd.DataFrame:
+def extract_prices(tickers, years) -> pd.DataFrame:
     end = dt.date.today()
     start = end - dt.timedelta(days=365 * years)
 
