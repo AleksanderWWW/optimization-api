@@ -1,21 +1,26 @@
 import numpy as np
 import pandas as pd
 
-from backend.opt_engine import Data, calculate_volatility, calculate_expected_returns
+from backend.opt_engine import Data, calculate_volatility, calculate_individual_expected_returns, calculate_expected_returns
 
 
 def generate_portfolios(data: Data, num_portfolios: int, num_assets: int) -> pd.DataFrame:
 
-    p_ret = []  # Define an empty array for portfolio returns
-    p_vol = []  # Define an empty array for portfolio volatility
-    p_weights = []  # Define an empty array for asset weights
+    p_ret = []  # define an empty array for portfolio returns
+    p_vol = []  # define an empty array for portfolio volatility
+    p_weights = []  # define an empty array for asset weights
+
+    # this needs to be calculated only once
+    # and then dot-producted with given 
+    # array of weights
+    ind_exp_returns = calculate_individual_expected_returns(data)
 
     for _ in range(num_portfolios):
         weights = np.random.random(num_assets)
         weights = weights / np.sum(weights)
         p_weights.append(weights)
 
-        returns = calculate_expected_returns(data, weights)
+        returns = calculate_expected_returns(ind_exp_returns, weights)
         p_ret.append(returns)
 
         vol = calculate_volatility(data, weights) # Annual standard deviation = volatility
