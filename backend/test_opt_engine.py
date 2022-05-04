@@ -26,7 +26,7 @@ class TestCalculations:
 
     def test_volatility_calculation(self):
         ann_sd = opt.calculate_volatility(self.data, self.weights)
-        assert np.round(ann_sd, 2) == 24.32
+        assert np.round(ann_sd, 2) == 0.22
 
     def test_individual_expected_returns_calculation(self):
         assert True
