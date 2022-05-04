@@ -16,7 +16,7 @@ class Data:
     def pct_data(self) -> pd.DataFrame:
         """Returns dataframe with daily percentage changes of the prices"""
         if "pct" not in self.objects.keys():
-            self.objects["pct"] = self.table.pct_change()
+            self.objects["pct"] = self.table.pct_change().apply(lambda x: np.log(1 + x))
         return self.objects["pct"]
 
     @property
