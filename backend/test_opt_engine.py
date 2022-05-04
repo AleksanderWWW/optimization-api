@@ -6,7 +6,7 @@ import backend.opt_engine as opt
 
 class TestData:
     df = pd.DataFrame({"A": [.3, .4, .5],
-                        "B": [.7, -.1, -.3]})
+                        "B": [.7, .1, .3]})
     data = opt.Data(df)
 
     def test_pct_change_in_objects(self):
@@ -20,13 +20,13 @@ class TestData:
 
 class TestCalculations:
     df = pd.DataFrame({"A": [.3, .4, .5],
-                        "B": [.7, -.1, -.3]})
+                        "B": [.7, .1, .3]})
     data = opt.Data(df)
     weights = np.array([.3, .7])
 
     def test_volatility_calculation(self):
         ann_sd = opt.calculate_volatility(self.data, self.weights)
-        assert np.round(ann_sd, 2) == 0.22
+        assert np.round(ann_sd, 2) == 23.61
 
     def test_individual_expected_returns_calculation(self):
         assert True
