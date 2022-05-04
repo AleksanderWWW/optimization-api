@@ -10,6 +10,8 @@ Tasks to be done as well as those completed in the development process
 
 [ ] Create application front-end
 
+[ ] Write unit tests for app
+
 
 ---
 
@@ -19,7 +21,7 @@ Tasks to be done as well as those completed in the development process
 
 [ ] Outline tasks to be performed
 
-[ ] Create test suite
+[ ] Write unit tests for backend package
 
 ---
 
