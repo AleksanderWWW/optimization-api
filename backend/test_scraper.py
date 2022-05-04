@@ -1,6 +1,6 @@
 from datetime import date
 
-from backend.scraper import Scraper, extract_prices
+from backend.scraper import Scraper
 
 
 class TestScraper:
@@ -28,9 +28,9 @@ class TestScraper:
             end = date.today()
         )
         sc.get_time_series("IBM")
-        ts = sc.all_dfs[0]
+        ts = sc.all_time_series[0]
         
-        assert len(ts) == 505
+        assert len(ts) == 506
 
     def test_scrape_data_produces_sorted_data_frame(self):
         tickers_to_set = ["AXP", "AMGN", "GS", "HD", "IBM"]
@@ -42,3 +42,14 @@ class TestScraper:
         sc.scrape_data()
 
         assert sc.data.columns.to_list() == sorted(sc.data.columns.to_list())
+
+    def test_merge_data_frames_produces_df_of_correct_shape(self):
+        tickers_to_set = ["AXP", "AMGN", "GS", "HD", "IBM"]
+        sc = Scraper(
+            start=date(2020, 5, 4),
+            end = date.today()
+        )
+        sc.set_tickers(tickers_to_set)
+        sc.scrape_data()
+
+        assert sc.data.shape == (506, 5)
