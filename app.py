@@ -6,8 +6,8 @@ from core import simulate
 app = Flask(__name__)
 
 
-@app.route('/api/optimize', methods=['GET', 'POST'])
-def optimize_portfolio():
+@app.route('/api/optimize/effFrontier', methods=['GET', 'POST'])
+def optimize_portfolio_ef():
     content = request.json
     tickers = content["tickers"]
     years = content["years"]
