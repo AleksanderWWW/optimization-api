@@ -53,4 +53,8 @@ Enjoy!
 
 ---
 
+## Appendix D: Taboo Search
+
+---
+
 *Author: Aleksander Wojnarowicz*
