@@ -11,11 +11,20 @@ from backend.opt_engine import (
 )
 
 
+def progress_bar(progress: int, total: int) -> None:
+    """Simple in-console progress bar - credit: NeuralNine"""
+    percent = 100 * (progress / total)
+
+    bar = '█' * int(percent) + '-' * (100 - int(percent))
+    print(f"\r|{bar}| {percent: .2f}%", end='\r')
+
+
 class Solver(ABC):
     """Abstract solver class for portfolio optimization"""
     def __init__(self, dataframe: pd.DataFrame, rfr: int) -> None:
         self.data = Data(dataframe)
         self.rfr = rfr
+
         
     @abstractmethod
     def optimize(self, *args, **kwargs):
@@ -40,7 +49,10 @@ class EfficientFrontierSolver(Solver):
         # array of weights
         ind_exp_returns = calculate_individual_expected_returns(self.data)
 
-        for _ in range(self.num_portfolios):
+        print("Performing efficient frontier optimization")
+        progress_bar(0, self.num_portfolios)
+
+        for i in range(self.num_portfolios):
             weights = np.random.random(self.data.num_assets)
             weights = weights / np.sum(weights)
             p_weights.append(weights)
@@ -50,6 +62,7 @@ class EfficientFrontierSolver(Solver):
 
             vol = calculate_volatility(self.data, weights) # Annual standard deviation = volatility
             p_vol.append(vol)
+            progress_bar(i + 1, self.num_portfolios)
 
         df = pd.DataFrame({'Returns': p_ret, 'Volatility': p_vol})
 
