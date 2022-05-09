@@ -20,6 +20,8 @@ Tasks to be done as well as those completed in the development process
 
 [ ] Write route to optimize with all 3 algorithms
 
+[ ] Add progress bars to algorithms
+
 
 ---
 
