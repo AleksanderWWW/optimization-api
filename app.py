@@ -1,4 +1,3 @@
-from crypt import methods
 from flask import Flask, request, jsonify
 
 from backend.scraper import extract_prices
@@ -38,7 +37,7 @@ def optimize_portfolio_ef():
         rfr = 0.01
     df = extract_prices(tickers, years)
     solver = EfficientFrontierSolver(df, num_portfolios, rfr)
-    result = solver.simulate(df, num_portfolios)
+    result = solver.optimize()
     return jsonify(result)
 
 
@@ -56,7 +55,7 @@ def optimize_portfolio_sa():
         rfr = content["rfr"]
     except KeyError:
         rfr = 0.01
-        
+
     df = extract_prices(tickers, years)
 
 
