@@ -10,6 +10,7 @@ import pandas as pd
 class Data:
     """Data class to hold historical prices and perform relevant calculations on them"""
     table: pd.DataFrame
+    num_assets: int = len(table)
     objects: dict = field(default_factory=dict)
 
     @property
