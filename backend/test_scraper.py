@@ -25,12 +25,12 @@ class TestScraper:
     def test_time_series_has_proper_length(self):
         sc = Scraper(
             start=date(2020, 5, 4),
-            end = date.today()
+            end = date(2022, 5, 9)
         )
         sc.get_time_series("IBM")
         ts = sc.all_time_series[0]
         
-        assert len(ts) == 506
+        assert len(ts) == 509
 
     def test_scrape_data_produces_sorted_data_frame(self):
         tickers_to_set = ["AXP", "AMGN", "GS", "HD", "IBM"]
@@ -47,9 +47,9 @@ class TestScraper:
         tickers_to_set = ["AXP", "AMGN", "GS", "HD", "IBM"]
         sc = Scraper(
             start=date(2020, 5, 4),
-            end = date.today()
+            end = date(2022, 5, 9)
         )
         sc.set_tickers(tickers_to_set)
         sc.scrape_data()
 
-        assert sc.data.shape == (506, 5)
+        assert sc.data.shape == (509, 5)
