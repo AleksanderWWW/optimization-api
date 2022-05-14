@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Callable
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -49,3 +49,57 @@ def calculate_expected_returns(ind_er: np.array, weights: List[float]) -> float:
     """Returns the product of expected returns of individual assets
     with the weights of those assets in a given portfolio""" 
     return np.dot(weights, ind_er)  
+
+
+class TabuSearch:
+    """Generic tabu search implementation. Source: https://towardsdatascience.com/optimization-techniques-tabu-search-36f197ef8e25"""
+    def __init__(self, init_solution, 
+                 func: Callable, neighbor_operator, 
+                 aspiration_criteria: Callable, 
+                 acceptable_threshold, 
+                 tenure: int):
+        self.currSolution = init_solution
+        self.bestSolution = init_solution
+        self.evaluate = func
+        self.aspirationCriteria = aspiration_criteria
+        self.neighborOperator = neighbor_operator
+        self.acceptableScoreThreshold = acceptable_threshold
+        self.tabuTenure = tenure
+        
+    def isTerminationCriteriaMet(self):
+        # can add more termination criteria
+        return self.evaluate(self.bestSolution) < self.acceptableScoreThreshold \
+            or self.neighborOperator(self.currSolution) == 0
+
+    def run(self):
+        tabuList = {}
+        
+        while not self.isTerminationCriteriaMet():
+            # get all of the neighbors
+            neighbors = self.neighborOperator(self.currSolution)
+            # find all tabuSolutions other than those
+            # that fit the aspiration criteria
+            tabuSolutions = tabuList.keys()
+            # find all neighbors that are not part of the Tabu list
+            neighbors = filter(lambda n: self.aspirationCriteria(n), neighbors)
+            # pick the best neighbor solution
+            newSolution = sorted(neighbors, key=lambda n: self.evaluate(n))[0]
+            # get the cost between the two solutions
+            cost = self.evaluate(self.solution) - self.evaluate(newSolution)
+            # if the new solution is better, 
+            # update the best solution with the new solution
+            if cost >= 0:
+                self.bestSolution = newSolution
+            # update the current solution with the new solution
+            self.currSolution = newSolution
+            
+            # decrement the Tabu Tenure of all tabu list solutions
+            for sol in tabuList:
+                tabuList[sol] -= 1
+                if tabuList[sol] == 0:
+                    del tabuList[sol]
+            # add new solution to the Tabu list
+            tabuList[newSolution] = self.tabuTenure
+
+        # return best solution found
+        return self.bestSolution
