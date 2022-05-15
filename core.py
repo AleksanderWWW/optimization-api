@@ -7,7 +7,8 @@ from backend.opt_engine import (
     Data, 
     calculate_volatility, 
     calculate_individual_expected_returns, 
-    calculate_expected_returns
+    calculate_expected_returns,
+    TabuSearch
 )
 
 
@@ -24,11 +25,27 @@ class Solver(ABC):
     def __init__(self, dataframe: pd.DataFrame, rfr: int) -> None:
         self.data = Data(dataframe)
         self.rfr = rfr
+        self.ind_exp_returns = calculate_individual_expected_returns(self.data)
 
         
     @abstractmethod
-    def optimize(self, *args, **kwargs):
+    def optimize(self, *args, **kwargs) -> dict:
         ...
+
+
+class Metaheuristic(Solver):
+    def __init__(self, dataframe: pd.DataFrame, rfr: int) -> None:
+        super().__init__(dataframe, rfr)
+
+    def objective_function(self, x: np.array) -> float:
+        """Function that will be optimised by the implemented metaheuristic"""
+
+        returns = calculate_expected_returns(self.ind_exp_returns, x)
+        vol = calculate_volatility(self.data, x) # Annual standard deviation = volatility
+        return (returns - self.rfr) / vol
+
+    def optimize(self, *args, **kwargs):
+        return super().optimize(*args, **kwargs)
 
 
 class EfficientFrontierSolver(Solver):
@@ -47,7 +64,6 @@ class EfficientFrontierSolver(Solver):
         # this needs to be calculated only once
         # and then dot-producted with given 
         # array of weights
-        ind_exp_returns = calculate_individual_expected_returns(self.data)
 
         print("Performing efficient frontier optimization")
         progress_bar(0, self.num_portfolios)
@@ -57,7 +73,7 @@ class EfficientFrontierSolver(Solver):
             weights = weights / np.sum(weights)
             p_weights.append(weights)
 
-            returns = calculate_expected_returns(ind_exp_returns, weights)
+            returns = calculate_expected_returns(self.ind_exp_returns, weights)
             p_ret.append(returns)
 
             vol = calculate_volatility(self.data, weights) # Annual standard deviation = volatility
@@ -78,11 +94,44 @@ class EfficientFrontierSolver(Solver):
         return optimal_risky_portfolio.to_dict()
 
 
-class SimulatedAnnealingSolver(Solver):
+class SimulatedAnnealingSolver(Metaheuristic):
     """Solver implementing simulated annealing optimization algorithm"""
     pass
 
 
-class TabooSearchSolver(Solver):
+class TabuSearchSolver(Metaheuristic):
     """Solver implementing taboo search optimization algorithm"""
-    pass
+    def __init__(self, dataframe: pd.DataFrame, rfr: int, threshold: int) -> None:
+        super().__init__(dataframe, rfr)     
+        self.threshold = threshold   
+
+    def _neighbourhood_op(self):
+        ...
+
+    def _aspiration_crit(self):
+        ...
+
+    def optimize(self) -> dict:
+        """Initialize starting point and run the tabu search procedure"""
+        
+
+        x0 = np.random.random(self.data.num_assets)
+
+        tabu_search = TabuSearch(
+            init_solution=x0,
+            neighbor_operator=self._neighbourhood_op,
+            aspiration_criteria=self._aspiration_crit,
+            acceptable_threshold=self.threshold
+        )
+
+        chosen_weights = tabu_search.run()
+        
+        result = {symbol + " weight": w for symbol, w in zip(
+            self.data.table.columns, 
+            chosen_weights)}
+
+        result["Sharpe ratio"] = self.objective_function(chosen_weights)
+        result["Volatility"] = calculate_volatility(self.data, chosen_weights)
+        result["Returns"] = calculate_expected_returns(self.ind_exp_returns, chosen_weights)
+
+        return result
