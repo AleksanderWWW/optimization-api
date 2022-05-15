@@ -1,4 +1,4 @@
-from typing import List, Callable
+from typing import List, Callable, Sequence, Union
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -51,13 +51,19 @@ def calculate_expected_returns(ind_er: np.array, weights: List[float]) -> float:
     return np.dot(weights, ind_er)  
 
 
+Neighbour = Sequence[Sequence]
+
+
 class TabuSearch:
     """Generic tabu search implementation. Source: https://towardsdatascience.com/optimization-techniques-tabu-search-36f197ef8e25"""
-    def __init__(self, init_solution, 
-                 func: Callable, neighbor_operator, 
-                 aspiration_criteria: Callable, 
-                 acceptable_threshold, 
+    def __init__(self, 
+                 init_solution: Sequence, 
+                 func: Callable[[Sequence], Union[int, float]], 
+                 neighbor_operator: Callable[[Sequence], Neighbour], 
+                 aspiration_criteria: Callable[[Sequence], Neighbour], 
+                 acceptable_threshold: Union[int, float], 
                  tenure: int):
+                 
         self.currSolution = init_solution
         self.bestSolution = init_solution
         self.evaluate = func
@@ -66,7 +72,7 @@ class TabuSearch:
         self.acceptableScoreThreshold = acceptable_threshold
         self.tabuTenure = tenure
         
-    def isTerminationCriteriaMet(self):
+    def isTerminationCriteriaMet(self) -> bool:
         # can add more termination criteria
         return self.evaluate(self.bestSolution) < self.acceptableScoreThreshold \
             or self.neighborOperator(self.currSolution) == 0
