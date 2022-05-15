@@ -11,13 +11,7 @@ from backend.opt_engine import (
     TabuSearch
 )
 
-
-def progress_bar(progress: int, total: int) -> None:
-    """Simple in-console progress bar - credit: NeuralNine"""
-    percent = 100 * (progress / total)
-
-    bar = '█' * int(percent) + '-' * (100 - int(percent))
-    print(f"\r|{bar}| {percent: .2f}%", end='\r')
+from utils import progress_bar
 
 
 class Solver(ABC):
