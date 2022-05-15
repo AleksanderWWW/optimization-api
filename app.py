@@ -4,8 +4,10 @@ from backend.scraper import extract_prices
 from core import (
     EfficientFrontierSolver,
     SimulatedAnnealingSolver,
-    TabooSearchSolver
+    TabuSearchSolver
 )
+
+from utils import extract_request_content
 
 
 app = Flask(__name__)
@@ -18,23 +20,7 @@ def home():
 
 @app.route('/api/optimize/effFrontier', methods=['GET', 'POST'])
 def optimize_portfolio_ef():
-    content = request.json
-    tickers = content["tickers"]
-
-    try:
-        years = content["years"]
-    except KeyError:
-        years = 1
-
-    try:
-        num_portfolios = content["num"]
-    except KeyError:
-        num_portfolios = 10_000
-
-    try:
-        rfr = content["rfr"]
-    except KeyError:
-        rfr = 0.01
+    tickers, years, num_portfolios, rfr = extract_request_content(request)
     df = extract_prices(tickers, years)
     solver = EfficientFrontierSolver(df, num_portfolios, rfr)
     result = solver.optimize()
@@ -43,31 +29,22 @@ def optimize_portfolio_ef():
 
 @app.route('/api/optimize/simAnnealing', methods=['GET', 'POST'])
 def optimize_portfolio_sa():
-    content = request.json
-    tickers = content["tickers"]
-
-    try:
-        years = content["years"]
-    except KeyError:
-        years = 1
-    
-    try:
-        rfr = content["rfr"]
-    except KeyError:
-        rfr = 0.01
+    tickers, years, rfr = extract_request_content(request, num_portfolios_needed=False)
 
     df = extract_prices(tickers, years)
 
 
 @app.route('/api/optimize/taboo', methods=['GET', 'POST'])
 def optimize_portfolio_taboo():
-    ...
+    tickers, years, rfr = extract_request_content(request, num_portfolios_needed=False)
+    df = extract_prices(tickers, years)
+
 
 
 @app.route('/api/optimize/', methods=['GET', 'POST'])
 def optimize_portfolio_all():
-    ...
-
+    tickers, years, num_portfolios, rfr = extract_request_content(request)
+    df = extract_prices(tickers, years)
 
 if __name__ == '__main__':
     app.run(host= '0.0.0.0', debug=True)
