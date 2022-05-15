@@ -1,4 +1,6 @@
-from typing import List, Callable, Sequence, Union
+import queue
+
+from typing import List, Callable, Union
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -51,61 +53,100 @@ def calculate_expected_returns(ind_er: np.array, weights: List[float]) -> float:
     return np.dot(weights, ind_er)  
 
 
-Neighbour = Sequence[Sequence]
-
-
 class TabuSearch:
-    """Generic tabu search implementation. Source: https://towardsdatascience.com/optimization-techniques-tabu-search-36f197ef8e25"""
+    """Tabu search algorithm implementation. 
+    Based on: https://towardsdatascience.com/
+    optimization-techniques-tabu-search-36f197ef8e25"""
     def __init__(self, 
-                 init_solution: Sequence, 
-                 func: Callable[[Sequence], Union[int, float]], 
-                 neighbor_operator: Callable[[Sequence], Neighbour], 
-                 aspiration_criteria: Callable[[Sequence], Neighbour], 
-                 acceptable_threshold: Union[int, float], 
-                 tenure: int):
+                 init_solution: np.array, 
+                 func: Callable[[np.array], Union[int, float]], 
+                 tenure: int,
+                 max_iter: int,
+                 no_neighbours: int = 10):
                  
-        self.currSolution = init_solution
-        self.bestSolution = init_solution
-        self.evaluate = func
-        self.aspirationCriteria = aspiration_criteria
-        self.neighborOperator = neighbor_operator
-        self.acceptableScoreThreshold = acceptable_threshold
-        self.tabuTenure = tenure
-        
-    def isTerminationCriteriaMet(self) -> bool:
-        # can add more termination criteria
-        return self.evaluate(self.bestSolution) < self.acceptableScoreThreshold \
-            or self.neighborOperator(self.currSolution) == 0
+        self.current_solution = init_solution
+        self.best_solution = init_solution
+        self.func = func
+        self.tenure = tenure
+        self.max_iter = max_iter
+        self.no_neighbours = no_neighbours
 
-    def run(self):
-        tabuList = {}
+        self.tabu_list = queue.deque()  # FIFO queue
+
+    def _get_neighbours(self) -> List[np.array]:
+        ...
+
+    def add_to_tabu_list(self, x: np.array) -> None:
+        if len(self.tabu_list) == self.tenure:
+            self.tabu_list.pop()
+        self.tabu_list.appendleft(hash(x))            
+
+    def aspiration_criterium(self, x: np.array) -> bool:
+        return self.func(x) < self.func(self.best_solution)
+
+    def select_solution(self) -> np.array:
+        neighbours = self._get_neighbours()
+        to_select = neighbours[0]
+
+        for n in neighbours:
+            if self.func(n) < self.func(to_select):
+                to_select = n
         
-        while not self.isTerminationCriteriaMet():
-            # get all of the neighbors
-            neighbors = self.neighborOperator(self.currSolution)
-            # find all tabuSolutions other than those
-            # that fit the aspiration criteria
-            tabuSolutions = tabuList.keys()
-            # find all neighbors that are not part of the Tabu list
-            neighbors = filter(lambda n: self.aspirationCriteria(n), neighbors)
-            # pick the best neighbor solution
-            newSolution = sorted(neighbors, key=lambda n: self.evaluate(n))[0]
-            # get the cost between the two solutions
-            cost = self.evaluate(self.solution) - self.evaluate(newSolution)
-            # if the new solution is better, 
-            # update the best solution with the new solution
-            if cost >= 0:
-                self.bestSolution = newSolution
-            # update the current solution with the new solution
-            self.currSolution = newSolution
-            
-            # decrement the Tabu Tenure of all tabu list solutions
-            for sol in tabuList:
-                tabuList[sol] -= 1
-                if tabuList[sol] == 0:
-                    del tabuList[sol]
-            # add new solution to the Tabu list
-            tabuList[newSolution] = self.tabuTenure
+        return to_select
+        
+    def run(self):
+        for i in range(self.max_iter):
+            self.add_to_tabu_list(self.current_solution)
+            new_point = self.select_solution()
+
+            if self.aspiration_criterium(new_point):
+                self.best_solution = new_point
+                self.current_solution = new_point
+                continue
+
+            if hash(new_point) not in self.tabu_list:
+                self.current_solution = new_point
 
         # return best solution found
-        return self.bestSolution
+        return self.best_solution
+
+
+class SimulatedAnnealing:
+    """Abstract implementation of simulated annealing algorithm"""
+    def __init__(self, func, start_x, temp_0, d, alpha, max_iter=1000):
+        self.func = func
+        self.current_x = start_x
+        self.temp = temp_0
+        self.n = len(start_x)
+        self.d = d
+        self.alpha = alpha
+        self.max_iter = max_iter
+        self.k = 0
+        
+    def draw_candidate(self):
+        return self.current_x + np.random.uniform(low=-self.d, high=self.d, size=self.n)
+    
+    def prob_transition(self, candidate):
+        """Probabilistic transition allows the algorithm to escape from local
+        minima and explore the design space further"""
+        A_k = min(1, np.e**(-1*(self.func(candidate) - self.func(self.current_x)) / self.temp))
+
+        if np.random.uniform(low=0, high=1) < A_k:
+                self.current_x = candidate
+                
+    def activate(self, candidate):
+        if self.func(candidate) <= self.func(self.current_x):
+            self.current_x = candidate
+        else:
+            self.prob_transition(candidate)          
+                
+    def cool_down(self):
+        self.temp *= self.alpha
+        
+    def run(self):
+        while self.k < self.max_iter:
+            candidate = self.draw_candidate()
+            self.activate(candidate)
+            self.cool_down()
+            self.k += 1
+        return self.current_x
