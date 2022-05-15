@@ -62,6 +62,7 @@ class TabuSearch:
                  func: Callable[[np.array], Union[int, float]], 
                  tenure: int,
                  max_iter: int,
+                 neighbourhood_size: float = 0.1,
                  no_neighbours: int = 10):
                  
         self.current_solution = init_solution
@@ -69,12 +70,22 @@ class TabuSearch:
         self.func = func
         self.tenure = tenure
         self.max_iter = max_iter
+        self.n_size = neighbourhood_size
         self.no_neighbours = no_neighbours
 
         self.tabu_list = queue.deque()  # FIFO queue
 
     def _get_neighbours(self) -> List[np.array]:
-        ...
+        result = []
+        for _ in range(self.no_neighbours):
+            result.append(
+                self.current_solution + np.random.uniform(low=-self.n_size, 
+                                                    high=self.n_size, 
+                                                    size=len(self.current_solution))
+            )
+        
+        return result
+
 
     def add_to_tabu_list(self, x: np.array) -> None:
         if len(self.tabu_list) == self.tenure:
