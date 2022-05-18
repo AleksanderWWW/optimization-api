@@ -78,11 +78,12 @@ class TabuSearch:
     def _get_neighbours(self) -> List[np.array]:
         result = []
         for _ in range(self.no_neighbours):
-            result.append(
-                self.current_solution + np.random.uniform(low=-self.n_size, 
+            candidate = self.current_solution + np.random.uniform(low=-self.n_size, 
                                                     high=self.n_size, 
                                                     size=len(self.current_solution))
-            )
+            candidate = np.abs(candidate)
+            candidate = candidate / candidate.sum()
+            result.append(candidate)
         
         return result
 
@@ -90,7 +91,7 @@ class TabuSearch:
     def add_to_tabu_list(self, x: np.array) -> None:
         if len(self.tabu_list) == self.tenure:
             self.tabu_list.pop()
-        self.tabu_list.appendleft(hash(x))            
+        self.tabu_list.appendleft(hash(tuple(x)))  # ndarray isn't directly hashable           
 
     def aspiration_criterium(self, x: np.array) -> bool:
         return self.func(x) < self.func(self.best_solution)
@@ -115,7 +116,7 @@ class TabuSearch:
                 self.current_solution = new_point
                 continue
 
-            if hash(new_point) not in self.tabu_list:
+            if hash(tuple(new_point)) not in self.tabu_list:
                 self.current_solution = new_point
 
         # return best solution found
