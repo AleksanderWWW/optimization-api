@@ -36,7 +36,7 @@ class Metaheuristic(Solver):
 
         returns = calculate_expected_returns(self.ind_exp_returns, x)
         vol = calculate_volatility(self.data, x) # Annual standard deviation = volatility
-        return (returns - self.rfr) / vol
+        return -1 * (returns - self.rfr) / vol  # -1 because we want to minimize the objective function
 
     def optimize(self, *args, **kwargs):
         return super().optimize(*args, **kwargs)
@@ -95,27 +95,32 @@ class SimulatedAnnealingSolver(Metaheuristic):
 
 class TabuSearchSolver(Metaheuristic):
     """Solver implementing taboo search optimization algorithm"""
-    def __init__(self, dataframe: pd.DataFrame, rfr: int, threshold: int) -> None:
-        super().__init__(dataframe, rfr)     
-        self.threshold = threshold   
-
-    def _neighbourhood_op(self):
-        ...
-
-    def _aspiration_crit(self):
-        ...
+    def __init__(self, dataframe: pd.DataFrame, rfr: int, 
+                 tenure: int,
+                 max_iter: int, 
+                 neighbour_size: float = 0.1,
+                 no_neighbours: int = 10) -> None:
+        super().__init__(dataframe, rfr)       
+        self.tenure = tenure
+        self.max_iter = max_iter
+        self.neighbour_size = neighbour_size
+        self.no_neighbours = no_neighbours
 
     def optimize(self) -> dict:
         """Initialize starting point and run the tabu search procedure"""
         
 
         x0 = np.random.random(self.data.num_assets)
+        x0 = np.abs(x0)
+        x0 = x0 / x0.sum()
 
         tabu_search = TabuSearch(
+            func=self.objective_function,
             init_solution=x0,
-            neighbor_operator=self._neighbourhood_op,
-            aspiration_criteria=self._aspiration_crit,
-            acceptable_threshold=self.threshold
+            tenure=self.tenure,
+            max_iter=self.max_iter,
+            neighbourhood_size=self.neighbourhood_size,
+            no_neighbours=self.no_neighbours
         )
 
         chosen_weights = tabu_search.run()
@@ -124,7 +129,7 @@ class TabuSearchSolver(Metaheuristic):
             self.data.table.columns, 
             chosen_weights)}
 
-        result["Sharpe ratio"] = self.objective_function(chosen_weights)
+        result["Sharpe ratio"] = -1 * self.objective_function(chosen_weights)
         result["Volatility"] = calculate_volatility(self.data, chosen_weights)
         result["Returns"] = calculate_expected_returns(self.ind_exp_returns, chosen_weights)
 
