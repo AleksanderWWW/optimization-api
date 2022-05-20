@@ -29,9 +29,21 @@ def optimize_portfolio_ef():
 
 @app.route('/api/optimize/simAnnealing', methods=['GET', 'POST'])
 def optimize_portfolio_sa():
-    tickers, years, rfr = extract_request_content(request, num_portfolios_needed=False)
+    tickers, years, rfr, temp_0, n_size, alpha, max_iter = extract_request_content(request, "annealing")
 
     df = extract_prices(tickers, years)
+
+    solver = SimulatedAnnealingSolver(
+        df,
+        rfr,
+        temp_0,
+        n_size,
+        alpha,
+        max_iter
+    )
+
+    result = solver.optimize()
+    return jsonify(result)
 
 
 @app.route('/api/optimize/taboo', methods=['GET', 'POST'])
