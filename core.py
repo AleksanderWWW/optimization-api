@@ -142,12 +142,12 @@ class TabuSearchSolver(Metaheuristic):
     def __init__(self, dataframe: pd.DataFrame, rfr: int, 
                  tenure: int,
                  max_iter: int, 
-                 neighbour_size: float = 0.1,
+                 neighbourhood_size: float = 0.1,
                  no_neighbours: int = 10) -> None:
         super().__init__(dataframe, rfr)       
         self.tenure = tenure
         self.max_iter = max_iter
-        self.neighbour_size = neighbour_size
+        self.neighbourhood_size = neighbourhood_size
         self.no_neighbours = no_neighbours
 
     def optimize(self) -> dict:
