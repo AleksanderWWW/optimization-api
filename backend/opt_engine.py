@@ -135,7 +135,10 @@ class SimulatedAnnealing:
         self.k = 0
         
     def draw_candidate(self):
-        return self.current_x + np.random.uniform(low=-self.d, high=self.d, size=self.n)
+        new_x = self.current_x + np.random.uniform(low=-self.d, high=self.d, size=self.n)
+        new_x = np.abs(new_x)
+        new_x = new_x / new_x.sum()
+        return new_x
     
     def prob_transition(self, candidate):
         """Probabilistic transition allows the algorithm to escape from local
