@@ -8,6 +8,7 @@ from backend.opt_engine import (
     calculate_volatility, 
     calculate_individual_expected_returns, 
     calculate_expected_returns,
+    SimulatedAnnealing,
     TabuSearch
 )
 
@@ -37,6 +38,23 @@ class Metaheuristic(Solver):
         returns = calculate_expected_returns(self.ind_exp_returns, x)
         vol = calculate_volatility(self.data, x) # Annual standard deviation = volatility
         return -1 * (returns - self.rfr) / vol  # -1 because we want to minimize the objective function
+
+    def generate_start_point(self):
+        x0 = np.random.random(self.data.num_assets)
+        x0 = np.abs(x0)
+        x0 = x0 / x0.sum()
+        return x0
+
+    def generate_result(self, chosen_weights: list) -> dict:
+        result = {symbol + " weight": w for symbol, w in zip(
+            self.data.table.columns, 
+            chosen_weights)}
+
+        result["Sharpe ratio"] = -1 * self.objective_function(chosen_weights)
+        result["Volatility"] = calculate_volatility(self.data, chosen_weights)
+        result["Returns"] = calculate_expected_returns(self.ind_exp_returns, chosen_weights)
+
+        return result
 
     def optimize(self, *args, **kwargs):
         return super().optimize(*args, **kwargs)
@@ -90,7 +108,33 @@ class EfficientFrontierSolver(Solver):
 
 class SimulatedAnnealingSolver(Metaheuristic):
     """Solver implementing simulated annealing optimization algorithm"""
-    pass
+    def __init__(self, dataframe: pd.DataFrame, 
+                 rfr: int,
+                 temp_0: float,
+                 neighbourhood_size: float,
+                 alpha: float,
+                 max_iter: int) -> None:
+        super().__init__(dataframe, rfr)
+        self.temp_0 = temp_0
+        self.neighbourhood_size = neighbourhood_size
+        self.alpha = alpha
+        self.max_iter = max_iter
+
+    def optimize(self) -> dict:
+        x0 = self.generate_start_point()
+        annealing_engine = SimulatedAnnealing(
+            func=self.objective_function,
+            start_x=x0,
+            temp_0=self.temp_0,
+            d=self.neighbourhood_size,
+            alpha=self.alpha,
+            max_iter=self.max_iter
+        )
+
+        chosen_weights = annealing_engine.run()
+
+        return self.generate_result(chosen_weights)
+
 
 
 class TabuSearchSolver(Metaheuristic):
@@ -108,11 +152,7 @@ class TabuSearchSolver(Metaheuristic):
 
     def optimize(self) -> dict:
         """Initialize starting point and run the tabu search procedure"""
-        
-
-        x0 = np.random.random(self.data.num_assets)
-        x0 = np.abs(x0)
-        x0 = x0 / x0.sum()
+        x0 = self.generate_start_point()
 
         tabu_search = TabuSearch(
             func=self.objective_function,
@@ -125,12 +165,5 @@ class TabuSearchSolver(Metaheuristic):
 
         chosen_weights = tabu_search.run()
         
-        result = {symbol + " weight": w for symbol, w in zip(
-            self.data.table.columns, 
-            chosen_weights)}
-
-        result["Sharpe ratio"] = -1 * self.objective_function(chosen_weights)
-        result["Volatility"] = calculate_volatility(self.data, chosen_weights)
-        result["Returns"] = calculate_expected_returns(self.ind_exp_returns, chosen_weights)
-
-        return result
+        return self.generate_result(chosen_weights)
+        
