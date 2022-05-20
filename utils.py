@@ -34,8 +34,12 @@ def extract_request_content(request, algorithm: str):
         return tickers, years, tenure, max_iter, neighbourhood_size, no_neighbours
     
     elif algorithm == "annealing":
-        # TODO: params for simulated annealing
-        pass
+        temp_0 = content["temp_0"]
+        neighbourhood_size = content["neighbourhood_size"]
+        alpha = content["alpha"]
+        max_iter = content["max_iter"]
+
+        return tickers, years, temp_0, neighbourhood_size, alpha, max_iter
 
     else:
         raise Exception(f"Algoritm {algorithm} not recognized. Viable options are: {algos}")
