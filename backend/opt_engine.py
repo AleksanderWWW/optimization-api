@@ -79,14 +79,13 @@ class TabuSearch:
         result = []
         for _ in range(self.no_neighbours):
             candidate = self.current_solution + np.random.uniform(low=-self.n_size, 
-                                                    high=self.n_size, 
-                                                    size=len(self.current_solution))
+            high=self.n_size, 
+            size=len(self.current_solution))
             candidate = np.abs(candidate)
             candidate = candidate / candidate.sum()
             result.append(candidate)
         
         return result
-
 
     def add_to_tabu_list(self, x: np.array) -> None:
         if len(self.tabu_list) == self.tenure:
@@ -106,7 +105,7 @@ class TabuSearch:
         
         return to_select
         
-    def run(self):
+    def run(self) -> np.array:
         for i in range(self.max_iter):
             self.add_to_tabu_list(self.current_solution)
             new_point = self.select_solution()
@@ -155,7 +154,7 @@ class SimulatedAnnealing:
     def cool_down(self):
         self.temp *= self.alpha
         
-    def run(self):
+    def run(self) -> np.array:
         while self.k < self.max_iter:
             candidate = self.draw_candidate()
             self.activate(candidate)
