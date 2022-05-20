@@ -31,7 +31,7 @@ def extract_request_content(request, algorithm: str):
         neighbourhood_size = content["neighbourhood_size"]
         no_neighbours = content["no_neighbours"]
 
-        return tickers, years, tenure, max_iter, neighbourhood_size, no_neighbours
+        return tickers, years, rfr, tenure, max_iter, neighbourhood_size, no_neighbours
     
     elif algorithm == "annealing":
         temp_0 = content["temp_0"]
@@ -39,7 +39,7 @@ def extract_request_content(request, algorithm: str):
         alpha = content["alpha"]
         max_iter = content["max_iter"]
 
-        return tickers, years, temp_0, neighbourhood_size, alpha, max_iter
+        return tickers, years, rfr, temp_0, neighbourhood_size, alpha, max_iter
 
     else:
         raise Exception(f"Algoritm {algorithm} not recognized. Viable options are: {algos}")
