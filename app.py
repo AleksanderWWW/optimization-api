@@ -56,11 +56,5 @@ def optimize_portfolio_taboo():
     return jsonify(result)
 
 
-@app.route('/api/optimize/', methods=['GET', 'POST'])
-def optimize_portfolio_all():
-    tickers, years, num_portfolios, rfr = extract_request_content(request)
-    df = extract_prices(tickers, years)
-
-
 if __name__ == '__main__':
     app.run(host= '0.0.0.0', debug=True)
