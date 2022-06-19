@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 
 from backend.scraper import extract_prices
 from core import (
@@ -15,7 +15,7 @@ app = Flask(__name__)
 
 @app.route('/api/home')
 def home():
-    ...
+    return render_template(r"home.html")
 
 
 @app.route('/api/optimize/effFrontier', methods=['GET', 'POST'])
