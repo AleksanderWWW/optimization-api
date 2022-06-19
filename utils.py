@@ -25,7 +25,7 @@ def extract_request_content(request, algorithm: str):
             num_portfolios = 10_000
         return tickers, years, num_portfolios, rfr
 
-    elif algorithm == "taboo":
+    elif algorithm == "tabu":
         tenure = content["tenure"]
         max_iter = content["max_iter"]
         neighbourhood_size = content["neighbourhood_size"]

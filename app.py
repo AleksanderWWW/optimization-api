@@ -49,7 +49,7 @@ def optimize_portfolio_sa():
 @app.route('/api/optimize/tabu', methods=['GET', 'POST'])
 def optimize_portfolio_taboo():
     tickers, years, rfr, tenure, max_iter, \
-        n_size, no_n  = extract_request_content(request, "taboo")
+        n_size, no_n  = extract_request_content(request, "tabu")
     df = extract_prices(tickers, years)
     solver = TabuSearchSolver(df, rfr, tenure, max_iter, n_size, no_n)
     result = solver.optimize()
